@@ -25,6 +25,7 @@ contract VestingContract is Ownable, ReentrancyGuard {
 
     mapping(address => VestingSchedule) public vestingSchedules;
     IERC20 public token;
+    uint256 public totalVestedAmount;
 
     event TokensClaimed(address indexed beneficiary, uint256 amount);
     event TokensDeposited(address indexed depositor, uint256 amount);
@@ -34,7 +35,7 @@ contract VestingContract is Ownable, ReentrancyGuard {
      * @dev Sets the token to be vested.
      * @param _tokenAddress The address of the ERC20 token.
      */
-    constructor(address _tokenAddress) {
+    constructor(address _tokenAddress) Ownable() {
         require(_tokenAddress != address(0), "Token address cannot be zero");
         token = IERC20(_tokenAddress);
     }
@@ -55,11 +56,14 @@ contract VestingContract is Ownable, ReentrancyGuard {
         require(vestingSchedules[beneficiary].startTime == 0, "Vesting schedule already exists for this beneficiary");
         require(amount > 0, "Amount must be greater than 0");
         require(beneficiary != address(0), "Beneficiary cannot be the zero address");
-        require(token.balanceOf(address(this)) >= amount, "Not enough tokens in the contract");
         require(cliff <= duration, "Cliff period cannot be longer than vesting duration");
+        
+        uint256 availableTokens = token.balanceOf(address(this)).sub(totalVestedAmount);
+        require(availableTokens >= amount, "Not enough tokens available for the new vesting schedule");
 
         uint256 startTime = block.timestamp;
         vestingSchedules[beneficiary] = VestingSchedule(cliff, startTime, duration, amount, 0);
+        totalVestedAmount = totalVestedAmount.add(amount);
 
         emit VestingScheduleCreated(beneficiary, amount);
     }
