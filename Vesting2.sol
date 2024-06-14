@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.18;
+pragma solidity 0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -35,7 +35,7 @@ contract VestingContract is Ownable, ReentrancyGuard {
      * @dev Sets the token to be vested.
      * @param _tokenAddress The address of the ERC20 token.
      */
-    constructor(address _tokenAddress) Ownable() {
+    constructor(address _tokenAddress) Ownable(msg.sender) {
         require(_tokenAddress != address(0), "Token address cannot be zero");
         token = IERC20(_tokenAddress);
     }
